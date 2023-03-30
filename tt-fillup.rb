@@ -8,6 +8,7 @@
 # Optional parameters:
 # @raycast.icon 🤖
 # @raycast.argument1 { "type": "text", "placeholder": "description" }
+# @raycast.argument2 { "type": "text", "placeholder": "duration minutes", "optional": true }
 
 # Documentation:
 # @raycast.author tsumuchan
@@ -27,6 +28,7 @@ API_KEY = ENV['TOGGL_API_KEY']
 API_BASE_URL = 'https://api.track.toggl.com/api/v9'
 
 description = ARGV[0]
+duration_minutes = ARGV[1]
 
 # Get the current user's information
 def get_user_info
@@ -78,23 +80,23 @@ def create_time_entry_with_duration(description, duration, workspace_id)
   response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
     http.request(request)
   end
-  # puts JSON.parse(response.body)
+  JSON.parse(response.body)
 end
 
 # main
 user_info = get_user_info
 
-last_end_time = get_last_end_time
-if last_end_time
-  duration = (Time.now - Time.parse(last_end_time)).to_i
+unless duration_minutes.empty?
+  duration = duration_minutes.to_i * 60
 else
-  duration = 0
+  last_end_time = get_last_end_time
+  puts "Last time entry ended at: #{last_end_time}"
+  duration = (Time.now - Time.parse(last_end_time)).to_i
 end
 
-puts "Last time entry ended at: #{last_end_time}"
 puts "Duration since last time entry: #{duration} seconds"
 
 if duration > 0
   new_time_entry = create_time_entry_with_duration(description, duration, user_info['default_workspace_id'])
-  puts "New time entry 「#{description}」 created with duration of #{duration} seconds"
+  puts "New time entry 「#{new_time_entry['description']}」 created with duration of #{new_time_entry['duration']} seconds"
 end
