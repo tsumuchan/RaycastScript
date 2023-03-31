@@ -62,14 +62,14 @@ end
 
 # Create a new time entry with a specified duration
 def create_time_entry_with_duration(description, duration, workspace_id)
-  start_time = (Time.now - duration).iso8601
-  end_time = Time.now.iso8601
+  start_time = Time.now - duration
+  # end_time = Time.now.iso8601
   data = {
       'workspace_id' => workspace_id,
       'description' => description,
-      'start' => start_time,
-      'stop' => end_time,
-      'duration' => duration,
+      'start' => start_time.iso8601,
+      # 'stop' => end_time,
+      'duration' => start_time.to_i * -1,
       'created_with' => 'Toggl API By Raycast',
   }
   uri = URI.parse(API_BASE_URL + "/workspaces/#{workspace_id}/time_entries")
