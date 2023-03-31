@@ -96,7 +96,5 @@ end
 
 puts "Duration since last time entry: #{duration} seconds"
 
-if duration > 0
-  new_time_entry = create_time_entry_with_duration(description, duration, user_info['default_workspace_id'])
-  puts "New time entry 「#{new_time_entry['description']}」 created with duration of #{new_time_entry['duration']} seconds"
-end
+new_time_entry = create_time_entry_with_duration(description, duration, user_info['default_workspace_id'])
+puts "New time entry 「#{new_time_entry['description']}」 created with duration of #{new_time_entry['duration']} seconds"
