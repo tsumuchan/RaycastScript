@@ -2,7 +2,7 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title post2slack
+# @raycast.title times
 # @raycast.mode compact
 
 # Optional parameters:
@@ -12,5 +12,12 @@
 # Documentation:
 # @raycast.author tsumuchan
 
-puts "Hello World! Argument1 value: " + ARGV[0]
+require './common/post2slack.rb'
+require 'dotenv'
 
+Dotenv.load
+
+message = ARGV[0]
+post_url = ENV['SLACK_WEBHOOK_TIMES']
+
+post2slack(message, post_url)
