@@ -2,13 +2,14 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title tt fillup
+# @raycast.title trackings
 # @raycast.mode compact
 
 # Optional parameters:
 # @raycast.icon 🤖
 # @raycast.argument1 { "type": "text", "placeholder": "description" }
-# @raycast.argument2 { "type": "text", "placeholder": "duration minutes", "optional": true }
+# @raycast.argument2 { "type": "text", "placeholder": "minutes. -1 -> fill up" }
+# @raycast.argument3 { "type": "text", "placeholder": "running? y/n" }
 
 # Documentation:
 # @raycast.author tsumuchan
@@ -26,9 +27,6 @@ API_KEY = ENV['TOGGL_API_KEY']
 
 # Toggl API endpoint URLs
 API_BASE_URL = 'https://api.track.toggl.com/api/v9'
-
-description = ARGV[0]
-duration_minutes = ARGV[1]
 
 # Get the current user's information
 def get_user_info
@@ -61,17 +59,23 @@ def get_last_end_time
 end
 
 # Create a new time entry with a specified duration
-def create_time_entry_with_duration(description, duration, workspace_id)
-  start_time = Time.now - duration
-  # end_time = Time.now.iso8601
+def create_time_entry_with_duration(description, duration, workspace_id, is_running)
+  now = Time.now
+  start_time = now - duration
+  end_time = now
   data = {
       'workspace_id' => workspace_id,
       'description' => description,
       'start' => start_time.iso8601,
-      # 'stop' => end_time,
-      'duration' => start_time.to_i * -1,
       'created_with' => 'Toggl API By Raycast',
   }
+
+  if is_running
+    data['duration'] = start_time.to_i * -1
+  else
+    data['stop'] = end_time.iso8601
+  end
+
   uri = URI.parse(API_BASE_URL + "/workspaces/#{workspace_id}/time_entries")
   request = Net::HTTP::Post.new(uri)
   request.basic_auth(API_KEY, 'api_token')
@@ -84,9 +88,13 @@ def create_time_entry_with_duration(description, duration, workspace_id)
 end
 
 # main
+description = ARGV[0]
+duration_minutes = ARGV[1]
+is_running = ["y", "yes"].include?(ARGV[2])
+
 user_info = get_user_info
 
-unless duration_minutes.empty?
+if duration_minutes.to_i != -1
   duration = duration_minutes.to_i * 60
 else
   last_end_time = get_last_end_time
@@ -96,5 +104,5 @@ end
 
 puts "Duration since last time entry: #{duration} seconds"
 
-new_time_entry = create_time_entry_with_duration(description, duration, user_info['default_workspace_id'])
+new_time_entry = create_time_entry_with_duration(description, duration, user_info['default_workspace_id'], is_running)
 puts "New time entry 「#{new_time_entry['description']}」 created with duration of #{new_time_entry['duration']} seconds"
